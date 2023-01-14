@@ -1,4 +1,4 @@
-<x-layout>
+<x-layout doctitle="Manage Avatar">
     <div class="container container--narrow [y-md-5">
         <h2 class="text-center mb-3">
             Upload a New Avatar
