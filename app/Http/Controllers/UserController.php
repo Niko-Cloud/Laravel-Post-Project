@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Events\OurExampleEvent;
 use App\Models\Follow;
+use App\Models\Post;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\View;
 use Illuminate\Validation\Rule;
@@ -103,7 +105,14 @@ class UserController extends Controller
             return view('homepage-feed',
                 ['posts' => auth()->user()->feedPosts()->latest()->paginate(5)]);
         }else{
-            return view('homepage');
+            $postCount = Cache::remember('postCount',20,function (){
+                sleep(1);
+                return Post::count();
+            });
+
+            return view('homepage', [
+                'postCount'=> $postCount
+            ]);
         }
     }
 
@@ -121,6 +130,20 @@ class UserController extends Controller
         auth()->login($user);
 
         return redirect('/')->with('success', 'Account Created');
+    }
+
+    public function loginApi(Request $request){
+        $incomingFields = $request->validate([
+            'username' => 'required',
+            'password' => 'required'
+        ]);
+
+        if(auth()->attempt($incomingFields)){
+            $user = User::where('username', $incomingFields['username'])->first();
+            $token = $user->createToken('1stLaravelToken')->plainTextToken;
+            return $token;
+        }
+        return 'Who Are You??';
     }
 
     public function login(Request $request){
