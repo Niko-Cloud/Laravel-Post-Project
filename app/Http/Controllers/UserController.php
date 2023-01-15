@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\OurExampleEvent;
 use App\Models\Follow;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -63,6 +64,12 @@ class UserController extends Controller
         ['posts'=>$user->posts()->latest()->get()]);
     }
 
+    public function profileRaw(User $user){
+
+        return response()->json(['theHTML' => 'Imagine this is the posts HTML',
+            'docTitle'=> $user->username. "'s Profile"]);
+    }
+
     public function profileFollowers(User $user){
 
         $this->getSharedData($user);
@@ -112,6 +119,7 @@ class UserController extends Controller
 
         if(auth()->attempt(['username'=>$incomingFields['loginusername'], 'password'=>$incomingFields['loginpassword']])){
             $request->session()->regenerate();
+            event(new OurExampleEvent(['username'=>auth()->user()->username, 'action'=>'login']));
             return redirect('/')->with('success', 'You have successfully login');
         }else{
             return redirect('/')->with('failed', 'Wrong authentication');
@@ -119,6 +127,7 @@ class UserController extends Controller
     }
 
     public function logout(){
+        event(new OurExampleEvent(['username'=>auth()->user()->username, 'action'=>'logout']));
         auth()->logout();
         return redirect('/')->with('success', 'You are now logout');
     }
